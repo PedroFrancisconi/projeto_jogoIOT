@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cyber Defense: Casa Inteligente</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2f6;--panel:#fff;--ink:#14222e;--mut:#5b6b79;--line:#c9d4de;--blue:#1f5fa8;--ok:#0f8a6a;--bad:#c9501c;--warn:#b7791f;--house:#f7fafc;--room:#e6edf4;--term:#0f1d29;--termink:#9fe3cf;
+color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1a26;--panel:#152636;--ink:#e6eef5;--mut:#92a5b6;--line:#294055;--blue:#6fb0ff;--ok:#3ecf9f;--bad:#ff8a52;--warn:#f2c14e;--house:#112233;--room:#183049;--term:#08121b;--termink:#9fe3cf;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1a26;--panel:#152636;--ink:#e6eef5;--mut:#92a5b6;--line:#294055;--blue:#6fb0ff;--ok:#3ecf9f;--bad:#ff8a52;--warn:#f2c14e;--house:#112233;--room:#183049;--term:#08121b;--termink:#9fe3cf;color-scheme:dark}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 "IBM Plex Sans",system-ui,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:center;justify-content:space-between;padding:16px clamp(14px,3vw,32px);border-bottom:1px solid var(--line);background:var(--panel)}
+h1{font-size:1.25rem;margin:0;font-weight:700;letter-spacing:-.01em}
+h1 small{display:block;font-weight:400;color:var(--mut);font-size:.85rem}
+.hud{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.stat b{display:block;font:600 1.3rem "IBM Plex Mono",monospace}
+.stat span{font-size:.8rem;color:var(--mut)}
+.meter{width:min(220px,60vw)}
+.meter div.bar{height:12px;border-radius:6px;background:var(--room);overflow:hidden;border:1px solid var(--line)}
+.meter i{display:block;height:100%;width:15%;background:var(--bad);transition:width .5s,background .5s}
+main{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);gap:18px;padding:18px clamp(14px,3vw,32px) 32px;max-width:1300px;margin:0 auto}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+.reqs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.req{flex:1 1 150px;border:1px solid var(--line);border-radius:8px;padding:8px 12px;background:var(--panel)}
+.req b{font-size:.9rem}.req span{display:block;font:600 .95rem "IBM Plex Mono",monospace;color:var(--blue)}
+.req.full span{color:var(--ok)}
+svg{width:100%;height:auto;display:block}
+.hs{cursor:pointer;outline:none}
+.hs circle.ring{fill:var(--panel);stroke:var(--blue);stroke-width:3}
+.hs:hover circle.ring,.hs:focus-visible circle.ring{stroke-width:6}
+.hs.sel circle.ring{stroke:var(--warn);stroke-width:6}
+.hs.done circle.ring{stroke:var(--ok)}
+.hs .pulse{fill:none;stroke:var(--blue);stroke-width:2;opacity:.6;animation:p 2.2s infinite}
+.hs.done .pulse{display:none}
+@keyframes p{0%{r:26;opacity:.7}100%{r:40;opacity:0}}
+@media(prefers-reduced-motion:reduce){.hs .pulse{animation:none}.meter i{transition:none}}
+.hs text.ico{font-size:24px;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.hs text.lbl{font:600 12px "IBM Plex Sans",sans-serif;text-anchor:middle;fill:var(--ink);pointer-events:none}
+.hs text.chk{font-size:16px;fill:var(--ok);text-anchor:middle;pointer-events:none}
+.room{font:12px "IBM Plex Sans",sans-serif;fill:var(--mut)}
+h2{font-size:1.1rem;margin:0 0 6px}
+.term{background:var(--term);color:var(--termink);font:13px/1.6 "IBM Plex Mono",monospace;border-radius:8px;padding:12px 14px;margin:10px 0}
+.term div::before{content:"> ";opacity:.6}
+.step{margin:14px 0 6px;font-weight:600}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer}
+.opt:hover:not(:disabled){border-color:var(--blue);background:var(--room)}
+.opt:focus-visible,.btn:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.opt:disabled{opacity:.55;cursor:not-allowed;text-decoration:line-through}
+.opt.good{border-color:var(--ok);background:var(--room);opacity:1;text-decoration:none}
+.msg{margin-top:10px;padding:10px 12px;border-radius:8px;font-size:.95rem;border-left:4px solid var(--blue);background:var(--room)}
+.msg.bad{border-color:var(--bad)}.msg.ok{border-color:var(--ok)}
+.tag{display:inline-block;font:600 .75rem "IBM Plex Mono",monospace;padding:2px 8px;border-radius:99px;border:1px solid var(--line);margin-right:6px}
+.btn{font:600 1rem "IBM Plex Sans",sans-serif;background:var(--blue);color:#fff;border:0;border-radius:8px;padding:10px 16px;cursor:pointer}
+:root[data-theme="dark"] .btn{color:#06121d}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn{color:#06121d}}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+ul.how{margin:8px 0 0;padding-left:20px;color:var(--mut)}
+.log{max-height:150px;overflow:auto;font-size:.85rem;color:var(--mut);margin-top:12px;padding-left:18px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Cyber Defense: Casa Inteligente<small>Encontre as falhas, entenda o risco e proteja a família.</small></h1>
+  <div class="hud">
+    <div class="stat"><b id="score">0</b><span>pontos</span></div>
+    <div class="meter"><div class="stat"><span>Nível de segurança: <b id="lvl" style="display:inline;font-size:1rem">15%</b></span></div><div class="bar"><i id="bar"></i></div></div>
+    <button class="btn ghost" id="reset">Reiniciar</button>
+  </div>
+</header>
+<main>
+  <section>
+    <div class="reqs" id="reqs"></div>
+    <div class="card">
+      <svg viewBox="0 0 800 500" role="img" aria-label="Corte de uma casa inteligente com oito dispositivos conectados">
+        <rect x="0" y="0" width="800" height="500" fill="none"/>
+        <polygon points="40,170 400,40 760,170" fill="var(--room)" stroke="var(--line)" stroke-width="3"/>
+        <rect x="60" y="170" width="680" height="300" fill="var(--house)" stroke="var(--line)" stroke-width="3"/>
+        <line x1="60" y1="320" x2="740" y2="320" stroke="var(--line)" stroke-width="3"/>
+        <line x1="400" y1="170" x2="400" y2="320" stroke="var(--line)" stroke-width="3"/>
+        <line x1="250" y1="320" x2="250" y2="470" stroke="var(--line)" stroke-width="3"/>
+        <line x1="520" y1="320" x2="520" y2="470" stroke="var(--line)" stroke-width="3"/>
+        <rect x="150" y="60" width="0" height="0"/>
+        <path d="M20 470H780" stroke="var(--line)" stroke-width="4"/>
+        <text class="room" x="74" y="192">Quarto do bebê</text>
+        <text class="room" x="414" y="192">Escritório</text>
+        <text class="room" x="74" y="342">Entrada</text>
+        <text class="room" x="264" y="342">Sala</text>
+        <text class="room" x="534" y="342">Cozinha</text>
+        <path d="M360 90q40-34 80 0" fill="none" stroke="var(--blue)" stroke-width="3" opacity=".6"/>
+        <path d="M376 104q24-20 48 0" fill="none" stroke="var(--blue)" stroke-width="3" opacity=".6"/>
+        <circle cx="400" cy="116" r="4" fill="var(--blue)"/>
+        <g id="spots"></g>
+      </svg>
+    </div>
+  </section>
+  <aside class="card" id="panel" aria-live="polite"></aside>
+</main>
+<script>
+const V={padrao:"Credenciais padrão de fábrica",fraca:"Senha fraca e sem bloqueio de tentativas",cripto:"Criptografia Wi‑Fi obsoleta (WEP)",firmware:"Firmware desatualizado",exposto:"Exposto à internet (UPnP e portas abertas)",semauth:"Ações sensíveis sem autenticação",ok:"Nenhuma: o dispositivo está protegido"};
+const T={botnet:"Botnet: o aparelho é sequestrado para atacar outros",mitm:"Interceptação de tráfego (man-in-the-middle)",forca:"Ataque de força bruta",espionagem:"Espionagem por vídeo e áudio",fraude:"Comandos e compras fraudulentas",ransom:"Ransomware com movimento lateral na rede",phish:"Phishing por e‑mail"};
+const M={senha:"Trocar a senha padrão por uma forte e ativar verificação em duas etapas",wifi:"Usar WPA3 (ou WPA2‑AES), desativar o WPS e atualizar o roteador",pin:"PIN longo, bloqueio após tentativas e alertas de acesso",upnp:"Desativar UPnP e liberar o acesso remoto apenas por VPN",voz:"Exigir PIN para compras e ativar o reconhecimento de voz",fw:"Atualizar o firmware, definir senha de admin e isolar na rede IoT",rest:"Reiniciar o aparelho toda semana",ssid:"Apenas ocultar o nome da rede Wi‑Fi",ign:"Ignorar: aparelhos domésticos não são alvos"};
+const D=[
+{id:"cam",n:"Câmera",ico:"📹",x:115,y:395,v:"padrao",t:"botnet",m:"senha",scan:["Modelo: câmera IP externa","Login: admin / senha: admin","Porta 554 (vídeo) aberta para a internet"],fix:"Câmeras com senha de fábrica são recrutadas por botnets como a Mirai. Senha única e 2FA fecham essa porta."},
+{id:"lock",n:"Fechadura",ico:"🔐",x:200,y:395,v:"fraca",t:"forca",m:"pin",scan:["Modelo: fechadura com teclado","Código atual: 1234","Sem limite de tentativas; log de acessos desligado"],fix:"Sem bloqueio, um robô testa todos os códigos curtos em minutos. PIN longo e alertas dificultam a entrada."},
+{id:"router",n:"Roteador",ico:"📡",x:310,y:400,v:"cripto",t:"mitm",m:"wifi",scan:["Wi‑Fi: criptografia WEP","WPS ativado","Firmware de 2019"],fix:"WEP é quebrado em minutos; quem entra na rede lê o tráfego dos outros aparelhos. WPA3 e WPS desligado resolvem."},
+{id:"tv",n:"Smart TV",ico:"📺",x:450,y:400,v:"ok",scan:["Atualização automática: ativa","Rede de convidados (isolada da rede principal)","Apps somente da loja oficial; microfone com botão físico"],fix:"Boa prática: a TV fica isolada, atualizada e sem permissões extras."},
+{id:"assist",n:"Assistente de voz",ico:"🔊",x:630,y:400,v:"semauth",t:"fraude",m:"voz",scan:["Compras por voz: liberadas","Reconhece qualquer voz","Sem PIN configurado"],fix:"Qualquer pessoa, ou um áudio da TV, pode comprar ou abrir a casa. PIN e voice match exigem autenticação."},
+{id:"baby",n:"Babá eletrônica",ico:"🍼",x:220,y:250,v:"exposto",t:"espionagem",m:"upnp",scan:["UPnP ativo: porta 8080 aberta automaticamente","Painel acessível por qualquer IP externo","Vídeo criptografado (TLS)"],fix:"Painel exposto é achado por buscadores como Shodan. Fechar a porta e usar VPN esconde o aparelho."},
+{id:"laptop",n:"Notebook",ico:"💻",x:490,y:250,v:"ok",scan:["Antivírus ativo e sistema em dia","Login com verificação em duas etapas","Disco criptografado e backup semanal"],fix:"Camadas de defesa: atualização, 2FA, criptografia e backup reduzem muito o impacto de um ataque."},
+{id:"printer",n:"Impressora",ico:"🖨️",x:640,y:250,v:"firmware",t:"ransom",m:"fw",scan:["Firmware de 2017 (3 falhas críticas conhecidas)","Painel web sem senha","Porta 9100 aberta na mesma rede do notebook"],fix:"Impressoras antigas são porta de entrada para ransomware. Atualizar, proteger o painel e isolar na rede IoT corta o caminho."}
+];
+const NV=D.filter(d=>d.v!=="ok").length, MAX=D.length*10+NV*20;
+let S,sel=null;
+const $=s=>document.querySelector(s);
+const h=s=>[...s].reduce((a,c)=>(a*31+c.charCodeAt(0))%9973,7);
+function init(){S={score:0,log:[],dev:{}};D.forEach(d=>S.dev[d.id]={step:0,wrong:{0:[],1:[],2:[]}});sel=null;draw()}
+function opts(d,k){
+ const P=k===0?V:k===1?T:M,c=k===0?d.v:k===1?d.t:d.m;
+ const o=Object.keys(P).filter(x=>x!==c).sort((a,b)=>h(d.id+a)-h(d.id+b)).slice(0,3).concat(c);
+ return o.sort((a,b)=>h(d.id+a+k)-h(d.id+b+k));
+}
+function finished(d){const s=S.dev[d.id].step;return d.v==="ok"?s>=1:s>=3}
+function draw(){
+ $("#spots").innerHTML=D.map(d=>`<g class="hs ${finished(d)?"done":""} ${sel===d.id?"sel":""}" data-id="${d.id}" tabindex="0" role="button" aria-label="Inspecionar ${d.n}"><circle class="pulse" cx="${d.x}" cy="${d.y}" r="26"/><circle class="ring" cx="${d.x}" cy="${d.y}" r="26"/><text class="ico" x="${d.x}" y="${d.y}">${d.ico}</text><text class="lbl" x="${d.x}" y="${d.y+43}">${d.n}</text>${finished(d)?`<text class="chk" x="${d.x+24}" y="${d.y-20}">✔</text>`:""}</g>`).join("");
+ document.querySelectorAll(".hs").forEach(g=>{g.onclick=()=>pick(g.dataset.id);g.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();pick(g.dataset.id)}}});
+ const id=D.filter(d=>S.dev[d.id].step>=1).length,th=D.filter(d=>d.v!=="ok"&&S.dev[d.id].step>=2).length,pr=D.filter(d=>d.v!=="ok"&&S.dev[d.id].step>=3).length;
+ const R=[["1. Identificar vulnerabilidades",id,D.length],["2. Reconhecer ameaças",th,NV],["3. Selecionar proteções",pr,NV]];
+ $("#reqs").innerHTML=R.map(r=>`<div class="req ${r[1]===r[2]?"full":""}"><b>${r[0]}</b><span>${r[1]} / ${r[2]}</span></div>`).join("");
+ const done=id+th+pr,tot=D.length+2*NV,pct=Math.round(15+85*done/tot);
+ $("#score").textContent=S.score;$("#lvl").textContent=pct+"%";const b=$("#bar");b.style.width=pct+"%";b.style.background=pct<45?"var(--bad)":pct<80?"var(--warn)":"var(--ok)";
+ panel();
+}
+function pick(id){sel=id;draw()}
+function panel(){
+ const p=$("#panel");
+ if(D.every(finished)){
+  const pct=Math.max(0,Math.round(S.score/MAX*100)),rank=pct>=90?"Analista sênior":pct>=70?"Analista pleno":pct>=45?"Analista júnior":"Aprendiz";
+  p.innerHTML=`<h2>Casa protegida</h2><p>Você corrigiu os ${NV} dispositivos vulneráveis e confirmou os ${D.length-NV} que já estavam seguros.</p><div class="term"><div>Pontuação: ${S.score} de ${MAX}</div><div>Aproveitamento: ${pct}%</div><div>Nível: ${rank}</div></div><p style="color:var(--mut)">Erros custam 5 pontos. Tente de novo para chegar perto de 100%.</p><div class="row"><button class="btn" id="again">Jogar de novo</button></div>${logHtml()}`;
+  $("#again").onclick=init;return;
+ }
+ if(!sel){
+  p.innerHTML=`<h2>Missão</h2><p>Esta casa tem ${D.length} dispositivos conectados. Alguns estão protegidos, outros têm falhas. Clique em um aparelho para inspecioná‑lo.</p><ul class="how"><li><b>Identificar:</b> leia o diagnóstico e diga qual é a vulnerabilidade (ou se não há nenhuma).</li><li><b>Reconhecer:</b> diga qual ameaça essa falha permite.</li><li><b>Proteger:</b> escolha a medida correta.</li></ul><p style="color:var(--mut)">Acerto vale 10 pontos na identificação e 20 nas outras etapas. Cada erro desconta 5.</p>${logHtml()}`;return;
+ }
+ const d=D.find(x=>x.id===sel),st=S.dev[d.id],k=st.step;
+ let h2=`<h2>${d.ico} ${d.n}</h2><div class="term">${d.scan.map(l=>`<div>${l}</div>`).join("")}</div>`;
+ if(finished(d)){
+  h2+=`<div class="msg ok"><span class="tag">${d.v==="ok"?"Seguro":"Corrigido"}</span>${d.fix}</div>`;
+ }else{
+  const q=["Qual é a vulnerabilidade deste dispositivo?","Qual ameaça essa falha permite?","Qual medida de proteção resolve o problema?"][k];
+  const P=[V,T,M][k];
+  h2+=`<div class="msg"><span class="tag">${k===0?"Identificar":k===1?"Reconhecer":"Proteger"}</span>${k===0?"":`Falha: <b>${V[d.v]}</b>. `}</div><div class="step">${q}</div><div class="opts">${opts(d,k).map(o=>`<button class="opt" data-o="${o}" ${st.wrong[k].includes(o)?"disabled":""}>${P[o]}</button>`).join("")}</div><div id="fb"></div>`;
+ }
+ p.innerHTML=h2+logHtml();
+ p.querySelectorAll(".opt").forEach(b=>b.onclick=()=>answer(d,k,b.dataset.o));
+}
+function answer(d,k,o){
+ const st=S.dev[d.id],c=k===0?d.v:k===1?d.t:d.m;
+ if(o===c){S.score+=k===0?10:20;st.step++;S.log.unshift(`${d.n}: ${["vulnerabilidade","ameaça","proteção"][k]} correta (+${k===0?10:20})`);
+  if(finished(d)&&d.v!=="ok")S.log.unshift(`${d.n} protegido`);draw();
+ }else{
+  S.score-=5;st.wrong[k].push(o);S.log.unshift(`${d.n}: resposta errada em ${["identificar","reconhecer","proteger"][k]} (−5)`);
+  const hint=k===0?(d.v==="ok"?"Releia o diagnóstico: há alguma configuração arriscada?":"Releia o diagnóstico: algo ali é uma falha."):k===1?"Pense em quem se beneficia dessa falha e o que ele faria.":"A medida deve atacar a causa da falha, não só esconder o sintoma.";
+  draw();$("#fb").innerHTML=`<div class="msg bad">Não é essa. ${hint}</div>`;
+ }
+}
+function logHtml(){return S.log.length?`<ul class="log">${S.log.slice(0,6).map(l=>`<li>${l}</li>`).join("")}</ul>`:""}
+$("#reset").onclick=init;
+init();
+</script>
+</body>
+</html>
